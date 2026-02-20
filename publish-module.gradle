@@ -1,65 +1,43 @@
 def isJitpack = System.getenv("JITPACK") == "true"
 
+// Always apply maven publish
+apply plugin: "maven-publish"
+
+// Apply signing only if NOT JitPack
 if (!isJitpack) {
-
-    apply plugin: "maven-publish"
     apply plugin: "signing"
+}
 
-    afterEvaluate { project ->
-        publishing {
-            publications {
-                release(MavenPublication) {
-                    groupId rootProject.ext.group
-                    artifactId project.artifactId
-                    version rootProject.ext.version
+afterEvaluate { project ->
 
-                    if (project.plugins.findPlugin("com.android.library")) {
-                        from components.release
-                    } else {
-                        from components.java
-                    }
+    publishing {
+        publications {
 
-                    pom {
-                        name = project.artifactName
-                        description = project.artifactDescrption
-                        url = "https://github.com/RyftPay/ryft-android"
+            release(MavenPublication) {
 
-                        licenses {
-                            license {
-                                name = "The MIT License"
-                                url = "https://raw.githubusercontent.com/RyftPay/ryft-android/master/LICENSE"
-                                distribution = "repo"
-                            }
-                        }
+                // Use project group & version (VERY IMPORTANT)
+                groupId project.group
+                artifactId project.name
+                version project.version
 
-                        developers {
-                            developer {
-                                id = "ryftpay"
-                                name = "Ryft"
-                            }
-                        }
-
-                        scm {
-                            connection = 'scm:git:github.com/RyftPay/ryft-android.git'
-                            developerConnection = 'scm:git:ssh://github.com/RyftPay/ryft-android.git'
-                            url = 'https://github.com/RyftPay/ryft-android/tree/master'
-                        }
-                    }
+                if (project.plugins.findPlugin("com.android.library")) {
+                    from components.release
+                } else {
+                    from components.java
                 }
             }
         }
     }
+}
 
+// Disable signing on JitPack
+if (!isJitpack) {
     signing {
         useInMemoryPgpKeys(
-            rootProject.ext["signingKeyId"],
-            rootProject.ext["signingKey"],
-            rootProject.ext["signingPassword"],
+                rootProject.ext["signingKeyId"],
+                rootProject.ext["signingKey"],
+                rootProject.ext["signingPassword"]
         )
         sign publishing.publications
-    }
-
-    task cleanBuildPublishLocal(type: GradleBuild) {
-        tasks = ['clean', 'build', 'publishToMavenLocal']
     }
 }
