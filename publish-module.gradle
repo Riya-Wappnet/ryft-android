@@ -1,60 +1,65 @@
-apply plugin: "maven-publish"
-apply plugin: 'signing'
+def isJitpack = System.getenv("JITPACK") == "true"
 
-afterEvaluate { project ->
-    publishing {
-        publications {
-            release(MavenPublication) {
-                groupId rootProject.ext.group
-                artifactId project.artifactId
-                version rootProject.ext.version
+if (!isJitpack) {
 
-                if (project.plugins.findPlugin("com.android.library")) {
-                    from components.release
-                } else {
-                    from components.java
-                }
+    apply plugin: "maven-publish"
+    apply plugin: "signing"
 
-                pom {
-                    name = project.artifactName
-                    description = project.artifactDescrption
-                    url = "https://github.com/RyftPay/ryft-android"
+    afterEvaluate { project ->
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    groupId rootProject.ext.group
+                    artifactId project.artifactId
+                    version rootProject.ext.version
 
-                    licenses {
-                        license {
-                            name = "The MIT License"
-                            url = "https://raw.githubusercontent.com/RyftPay/ryft-android/master/LICENSE"
-                            distribution = "repo"
-                        }
+                    if (project.plugins.findPlugin("com.android.library")) {
+                        from components.release
+                    } else {
+                        from components.java
                     }
 
-                    developers {
-                        developer {
-                            id = "ryftpay"
-                            name = "Ryft"
-                        }
-                    }
+                    pom {
+                        name = project.artifactName
+                        description = project.artifactDescrption
+                        url = "https://github.com/RyftPay/ryft-android"
 
-                    scm {
-                        connection = 'scm:git:github.com/RyftPay/ryft-android.git'
-                        developerConnection = 'scm:git:ssh://github.com/RyftPay/ryft-android.git'
-                        url = 'https://github.com/RyftPay/ryft-android/tree/master'
+                        licenses {
+                            license {
+                                name = "The MIT License"
+                                url = "https://raw.githubusercontent.com/RyftPay/ryft-android/master/LICENSE"
+                                distribution = "repo"
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id = "ryftpay"
+                                name = "Ryft"
+                            }
+                        }
+
+                        scm {
+                            connection = 'scm:git:github.com/RyftPay/ryft-android.git'
+                            developerConnection = 'scm:git:ssh://github.com/RyftPay/ryft-android.git'
+                            url = 'https://github.com/RyftPay/ryft-android/tree/master'
+                        }
                     }
                 }
             }
         }
     }
-}
 
-signing {
-    useInMemoryPgpKeys(
-        rootProject.ext["signingKeyId"],
-        rootProject.ext["signingKey"],
-        rootProject.ext["signingPassword"],
-    )
-    sign publishing.publications
-}
+    signing {
+        useInMemoryPgpKeys(
+            rootProject.ext["signingKeyId"],
+            rootProject.ext["signingKey"],
+            rootProject.ext["signingPassword"],
+        )
+        sign publishing.publications
+    }
 
-task cleanBuildPublishLocal(type: GradleBuild) {
-    tasks = ['clean', 'build', 'publishToMavenLocal']
+    task cleanBuildPublishLocal(type: GradleBuild) {
+        tasks = ['clean', 'build', 'publishToMavenLocal']
+    }
 }
